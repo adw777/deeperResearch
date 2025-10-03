@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Research Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #e4e4e7;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            background: #1e1e2e;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #2d2d3d;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: #13131a;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: #1e1e2e;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #3d3d4d;
+            border-radius: 4px;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: #1e1e2e;
+            border: 1px solid #2d2d3d;
+            color: #e4e4e7;
+        }
+
+        .text-segment {
+            margin-bottom: 16px;
+            line-height: 1.6;
+            color: #d4d4d8;
+        }
+
+        .text-segment:last-child {
+            margin-bottom: 0;
+        }
+
+        .reference-link {
+            display: inline-block;
+            background: #3730a3;
+            color: #a5b4fc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 0 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reference-link:hover {
+            background: #6366f1;
+            color: white;
+        }
+
+        .references-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid #2d2d3d;
+        }
+
+        .references-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #a5b4fc;
+            margin-bottom: 16px;
+        }
+
+        .reference-item {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #252530;
+            border-radius: 8px;
+            font-size: 14px;
+            border: 1px solid #2d2d3d;
+            transition: background 0.3s;
+        }
+
+        .reference-item.highlight {
+            background: #3d3d0d;
+        }
+
+        .reference-id {
+            font-weight: 600;
+            color: #a5b4fc;
+            margin-right: 8px;
+        }
+
+        .reference-title {
+            color: #e4e4e7;
+            margin-bottom: 4px;
+        }
+
+        .reference-meta {
+            font-size: 12px;
+            color: #a1a1aa;
+            margin-top: 4px;
+        }
+
+        .reference-url {
+            color: #818cf8;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .reference-url:hover {
+            text-decoration: underline;
+            color: #a5b4fc;
+        }
+
+        .input-container {
+            padding: 20px 24px;
+            background: #1e1e2e;
+            border-top: 1px solid #2d2d3d;
+            display: flex;
+            gap: 12px;
+        }
+
+        .mode-select {
+            padding: 12px;
+            border: 2px solid #2d2d3d;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #252530;
+            color: #e4e4e7;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .mode-select:focus {
+            border-color: #6366f1;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #2d2d3d;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #252530;
+            color: #e4e4e7;
+        }
+
+        .input-field:focus {
+            border-color: #6366f1;
+        }
+
+        .input-field::placeholder {
+            color: #71717a;
+        }
+
+        .send-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            padding: 16px 20px;
+            background: #1e1e2e;
+            border-radius: 12px;
+            border: 1px solid #2d2d3d;
+        }
+
+        .loading-text {
+            color: #a1a1aa;
+            font-style: italic;
+        }
+
+        .error {
+            color: #fca5a5;
+            background: #450a0a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            border: 1px solid #7f1d1d;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: #27272a;
+            color: #e4e4e7;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            max-width: 300px;
+            border: 1px solid #3f3f46;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Legal Research Assistant</h1>
+            <p>Deep research for legal queries worldwide with cited references</p>
+        </div>
+
+        <div class="chat-container" id="chatContainer"></div>
+
+        <div class="input-container">
+            <select class="mode-select" id="modeSelect">
+                <option value="normal">Normal</option>
+                <option value="detailed">Detailed</option>
+            </select>
+            <input 
+                type="text" 
+                class="input-field" 
+                id="queryInput" 
+                placeholder="Ask any legal question..."
+                onkeypress="handleKeyPress(event)"
+            />
+            <button class="send-button" id="sendButton" onclick="sendQuery()">Send</button>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/research';
+        let isLoading = false;
+        let messageCounter = 0;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !isLoading) {
+                sendQuery();
+            }
+        }
+
+        function addUserMessage(query) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `<div class="message-content">${escapeHtml(query)}</div>`;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addLoadingMessage() {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            messageDiv.id = 'loadingMessage';
+            messageDiv.innerHTML = `<div class="loading"><span class="loading-text">Researching legal information...</span></div>`;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+
+        function addAssistantMessage(data) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            const currentMessageId = messageCounter++;
+
+            if (data.error) {
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <div class="error">
+                            <strong>Error:</strong> ${escapeHtml(data.error)}
+                            ${data.details ? `<br><small>${escapeHtml(data.details)}</small>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                let contentHtml = '';
+                
+                data.content.forEach((segment, index) => {
+                    let text = escapeHtml(segment.text);
+                    
+                    if (segment.refs && segment.refs.length > 0) {
+                        text += ' ';
+                        segment.refs.forEach(refId => {
+                            const uniqueRefId = `msg${currentMessageId}-${refId}`;
+                            text += `<span class="reference-link" onclick="scrollToReference('${uniqueRefId}')" onmouseover="showTooltip(event, '${uniqueRefId}')" onmouseout="hideTooltip()">[${refId}]</span>`;
+                        });
+                    }
+                    
+                    contentHtml += `<div class="text-segment">${text}</div>`;
+                });
+
+                if (data.references && Object.keys(data.references).length > 0) {
+                    contentHtml += '<div class="references-section">';
+                    contentHtml += '<div class="references-title">References</div>';
+                    
+                    Object.entries(data.references).forEach(([refId, ref]) => {
+                        const uniqueRefId = `msg${currentMessageId}-${refId}`;
+                        contentHtml += `
+                            <div class="reference-item" id="${uniqueRefId}">
+                                <span class="reference-id">[${refId}]</span>
+                                <div class="reference-title">${escapeHtml(ref.title)}</div>
+                                <div class="reference-meta">
+                                    ${escapeHtml(ref.authors)} (${ref.year}) - ${ref.type}
+                                    ${ref.url ? `<br><a href="${escapeHtml(ref.url)}" target="_blank" class="reference-url">${escapeHtml(ref.url)}</a>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    contentHtml += '</div>';
+                }
+
+                messageDiv.innerHTML = `<div class="message-content">${contentHtml}</div>`;
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function scrollToReference(refId) {
+            const refElement = document.getElementById(refId);
+            if (refElement) {
+                refElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                refElement.classList.add('highlight');
+                setTimeout(() => {
+                    refElement.classList.remove('highlight');
+                }, 1500);
+            }
+        }
+
+        function showTooltip(event, refId) {
+            const tooltip = document.getElementById('tooltip');
+            const refElement = document.getElementById(refId);
+            
+            if (refElement) {
+                const refData = refElement.querySelector('.reference-title').textContent;
+                tooltip.textContent = refData;
+                tooltip.style.display = 'block';
+                tooltip.style.left = event.pageX + 10 + 'px';
+                tooltip.style.top = event.pageY + 10 + 'px';
+            }
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'none';
+        }
+
+        async function sendQuery() {
+            if (isLoading) return;
+
+            const queryInput = document.getElementById('queryInput');
+            const modeSelect = document.getElementById('modeSelect');
+            const sendButton = document.getElementById('sendButton');
+            const query = queryInput.value.trim();
+
+            if (!query) return;
+
+            isLoading = true;
+            sendButton.disabled = true;
+            queryInput.disabled = true;
+            modeSelect.disabled = true;
+
+            addUserMessage(query);
+            addLoadingMessage();
+            queryInput.value = '';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        mode: modeSelect.value
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                }
+
+                removeLoadingMessage();
+                
+                try {
+                    const data = JSON.parse(buffer);
+                    addAssistantMessage(data);
+                } catch (e) {
+                    addAssistantMessage({
+                        error: 'Failed to parse response',
+                        details: buffer.substring(0, 200)
+                    });
+                }
+
+            } catch (error) {
+                removeLoadingMessage();
+                addAssistantMessage({
+                    error: 'Failed to connect to the research API',
+                    details: error.message
+                });
+            } finally {
+                isLoading = false;
+                sendButton.disabled = false;
+                queryInput.disabled = false;
+                modeSelect.disabled = false;
+                queryInput.focus();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        window.onload = function() {
+            document.getElementById('queryInput').focus();
+        };
+    </script>
+</body>
+</html>

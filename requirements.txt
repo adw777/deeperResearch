@@ -1,0 +1,7 @@
+tavily-python
+deepagents
+langchain-openai
+python-dotenv
+fastapi
+uvicorn
+streamlit
